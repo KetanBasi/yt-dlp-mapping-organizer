@@ -107,9 +107,38 @@ class ChannelMappingPP(PostProcessor):
 
         # Load the mapping file
         _mapping_path: str = self._kwargs.get("config", "")
-        _mapping_path = os.path.abspath(_mapping_path)
+        _mapping_path = self._normalize_path(_mapping_path)
         self._mapping: dict = self.load_mapping(_mapping_path)
         self.mapped_fields: list = []
+
+    def _normalize_path(self, path: str) -> str:
+        """
+        Normalize a file path to handle various path formats.
+
+        Handles:
+            - Relative paths (e.g., "./config.json", "config.json")
+            - Home directory paths (e.g., "~/config.json")
+            - Absolute paths (e.g., "/etc/config.json", "C:\\config.json")
+
+        Args:
+            path (str): The path to normalize.
+
+        Returns:
+            str: The normalized absolute path.
+        """
+        if not path:
+            return path
+
+        # Expand user home directory (e.g., ~/path -> /home/user/path)
+        path = os.path.expanduser(path)
+
+        # Expand environment variables (e.g., $HOME/path or %USERPROFILE%/path)
+        path = os.path.expandvars(path)
+
+        # Convert to absolute path (handles relative paths)
+        path = os.path.abspath(path)
+
+        return path
 
     def _save_file(self, data: dict, file_path: str, file_type: ConfigTypeEnum):
         """
